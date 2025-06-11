@@ -1,4 +1,5 @@
 using System;
+using Ludo.Reactive.ErrorHandling;
 
 namespace Ludo.Reactive
 {
@@ -9,15 +10,19 @@ namespace Ludo.Reactive
     {
         private readonly ReactiveState<T> _cachedResult = new ReactiveState<T>();
         private readonly Func<ComputationBuilder, T> _computeFunction;
+        private readonly T _fallbackValue;
 
         public ComputedValue(
             string name,
             ReactiveScheduler scheduler,
             Func<ComputationBuilder, T> computeFunction,
+            T fallbackValue = default,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] staticDependencies)
-            : base(name, scheduler)
+            : base(name, scheduler, errorBoundary)
         {
             _computeFunction = computeFunction ?? throw new ArgumentNullException(nameof(computeFunction));
+            _fallbackValue = fallbackValue;
             
             foreach (var dependency in staticDependencies ?? new IObservable[0])
             {
@@ -32,8 +37,19 @@ namespace Ludo.Reactive
         protected override void ExecuteComputation()
         {
             using var builder = new ComputationBuilder(this);
-            var newValue = _computeFunction(builder);
-            _cachedResult.Set(newValue);
+
+            try
+            {
+                var newValue = _computeFunction(builder);
+                _cachedResult.Set(newValue);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogException(ex, $"Error computing value for '{Name}', using fallback value",
+                    new { FallbackValue = _fallbackValue, ComputationName = Name });
+                _cachedResult.Set(_fallbackValue);
+                throw; // Re-throw to let error boundary handle it
+            }
         }
 
         public SubscriptionHandle Subscribe(Action callback) => _cachedResult.Subscribe(callback);

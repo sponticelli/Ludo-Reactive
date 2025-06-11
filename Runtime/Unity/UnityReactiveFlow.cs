@@ -1,4 +1,5 @@
 using System;
+using Ludo.Reactive.ErrorHandling;
 
 namespace Ludo.Reactive.Unity
 {
@@ -17,17 +18,20 @@ namespace Ludo.Reactive.Unity
         public static ReactiveEffect CreateEffect(
             string name,
             Action<ComputationBuilder> logic,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] dependencies)
         {
-            return new ReactiveEffect(name, Scheduler, logic, dependencies);
+            return new ReactiveEffect(name, Scheduler, logic, errorBoundary, dependencies);
         }
 
         public static ComputedValue<T> CreateComputed<T>(
             string name,
             Func<ComputationBuilder, T> computation,
+            T fallbackValue = default,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] dependencies)
         {
-            return new ComputedValue<T>(name, Scheduler, computation, dependencies);
+            return new ComputedValue<T>(name, Scheduler, computation, fallbackValue, errorBoundary, dependencies);
         }
 
         /// <summary>
@@ -36,10 +40,11 @@ namespace Ludo.Reactive.Unity
         public static ReactiveEffect CreateMainThreadEffect(
             string name,
             Action<ComputationBuilder> logic,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] dependencies)
         {
             return new ReactiveEffect(name, Scheduler,
-                builder => { Scheduler.ScheduleOnMainThread(() => logic(builder)); }, dependencies);
+                builder => { Scheduler.ScheduleOnMainThread(() => logic(builder)); }, errorBoundary, dependencies);
         }
 
         /// <summary>
@@ -48,6 +53,8 @@ namespace Ludo.Reactive.Unity
         public static ComputedValue<T> CreateMainThreadComputed<T>(
             string name,
             Func<ComputationBuilder, T> computation,
+            T fallbackValue = default,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] dependencies)
         {
             var result = CreateState<T>();
@@ -56,9 +63,9 @@ namespace Ludo.Reactive.Unity
             {
                 var value = computation(builder);
                 result.Set(value);
-            }, dependencies);
+            }, errorBoundary, dependencies);
 
-            return new ComputedValue<T>(name, Scheduler, builder => builder.Track(result), result);
+            return new ComputedValue<T>(name, Scheduler, builder => builder.Track(result), fallbackValue, errorBoundary, result);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Ludo.Reactive
             params IObservable[] dependencies)
         {
             EnsureNotSealed();
-            return Use(new ComputedValue<T>($"{_owner.Name}.Computed", _owner.Scheduler, computation, dependencies));
+            return Use(new ComputedValue<T>($"{_owner.Name}.Computed", _owner.Scheduler, computation, default(T), null, dependencies));
         }
 
         public void CreateEffect(
@@ -52,7 +52,7 @@ namespace Ludo.Reactive
             params IObservable[] dependencies)
         {
             EnsureNotSealed();
-            Use(new ReactiveEffect($"{_owner.Name}.Effect", _owner.Scheduler, logic, dependencies));
+            Use(new ReactiveEffect($"{_owner.Name}.Effect", _owner.Scheduler, logic, null, dependencies));
         }
 
         // Context management

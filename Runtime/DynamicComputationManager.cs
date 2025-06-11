@@ -20,14 +20,14 @@ namespace Ludo.Reactive
         public void ManageEffect<TKey>(TKey key, Action<ComputationBuilder> logic, params IObservable[] dependencies)
         {
             Release(key);
-            var effect = new ReactiveEffect($"DynamicEffect-{key}", _scheduler, logic, dependencies);
+            var effect = new ReactiveEffect($"DynamicEffect-{key}", _scheduler, logic, null, dependencies);
             ManageDisposable(key, effect);
         }
 
         public void ManageComputed<TKey, T>(TKey key, Func<ComputationBuilder, T> computation, params IObservable[] dependencies)
         {
             Release(key);
-            var computed = new ComputedValue<T>($"DynamicComputed-{key}", _scheduler, computation, dependencies);
+            var computed = new ComputedValue<T>($"DynamicComputed-{key}", _scheduler, computation, default(T), null, dependencies);
             ManageDisposable(key, computed);
         }
 

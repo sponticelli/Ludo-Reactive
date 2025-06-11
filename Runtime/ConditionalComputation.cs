@@ -1,4 +1,5 @@
 using System;
+using Ludo.Reactive.ErrorHandling;
 
 namespace Ludo.Reactive
 {
@@ -15,8 +16,9 @@ namespace Ludo.Reactive
             ReactiveScheduler scheduler,
             IReadOnlyReactiveValue<bool> condition,
             Action<ComputationBuilder> conditionalLogic,
+            ErrorBoundary errorBoundary = null,
             params IObservable[] staticDependencies)
-            : base(name, scheduler)
+            : base(name, scheduler, errorBoundary)
         {
             _condition = condition ?? throw new ArgumentNullException(nameof(condition));
             _conditionalLogic = conditionalLogic ?? throw new ArgumentNullException(nameof(conditionalLogic));

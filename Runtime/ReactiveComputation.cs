@@ -1,4 +1,7 @@
 using System;
+using System.Diagnostics;
+using Ludo.Reactive.ErrorHandling;
+using Ludo.Reactive.Logging;
 
 namespace Ludo.Reactive
 {
@@ -12,16 +15,22 @@ namespace Ludo.Reactive
         protected bool _isPendingExecution;
         protected Exception _lastError;
         protected string _name;
+        protected ErrorBoundary _errorBoundary;
+        protected IReactiveLogger _logger;
 
-        protected ReactiveComputation(string name, ReactiveScheduler scheduler)
+        protected ReactiveComputation(string name, ReactiveScheduler scheduler, ErrorBoundary errorBoundary = null)
         {
             _name = name ?? GetType().Name;
             _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
             _dependencyTracker = new DependencyTracker(this);
+            _errorBoundary = errorBoundary ?? ReactiveGlobals.GlobalErrorBoundary;
+            _logger = ReactiveGlobals.Logger;
         }
 
         public ReactiveScheduler Scheduler => _scheduler;
         public string Name => _name;
+        public Exception LastError => _lastError;
+        public bool HasError => _lastError != null;
 
         internal void TrackDependency(IObservable dependency)
         {
@@ -40,20 +49,33 @@ namespace Ludo.Reactive
         internal void ExecuteInternal()
         {
             if (!_isPendingExecution) return;
-            
+
             _isPendingExecution = false;
-            
+
+            var stopwatch = Stopwatch.StartNew();
+            var success = false;
+
             try
             {
-                _dependencyTracker.BeginDynamicTracking();
-                ExecuteComputation();
-                _dependencyTracker.EndDynamicTracking();
+                _errorBoundary.Execute(_name, () =>
+                {
+                    _dependencyTracker.BeginDynamicTracking();
+                    ExecuteComputation();
+                    _dependencyTracker.EndDynamicTracking();
+                    success = true;
+                });
+
                 _lastError = null;
             }
             catch (Exception ex)
             {
                 _lastError = ex;
-                Console.WriteLine($"Exception in computation '{_name}': {ex}");
+                _logger?.LogException(ex, $"Unhandled exception in computation '{_name}'", new { ComputationName = _name });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                _logger?.LogComputationExecution(_name, stopwatch.Elapsed, success, _lastError);
             }
         }
 

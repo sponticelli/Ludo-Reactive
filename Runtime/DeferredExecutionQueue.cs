@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Ludo.Reactive.Logging;
 
 namespace Ludo.Reactive
 {
@@ -11,14 +12,16 @@ namespace Ludo.Reactive
         private int _holdCount;
         private Queue<Action> _pendingActions;
         private bool _isExecuting;
+        private IReactiveLogger _logger;
 
         public bool IsEmpty => (_pendingActions?.Count ?? 0) == 0 && !_isExecuting;
 
-        public void Initialize()
+        public void Initialize(IReactiveLogger logger = null)
         {
             _pendingActions = new Queue<Action>();
             _holdCount = 0;
             _isExecuting = false;
+            _logger = logger ?? ReactiveGlobals.Logger;
         }
 
         public void Hold() => _holdCount++;
@@ -37,9 +40,12 @@ namespace Ludo.Reactive
 
         public void Schedule(Action action)
         {
+            if (action == null) throw new ArgumentNullException(nameof(action));
             if (_pendingActions == null) Initialize();
-            
+
             _pendingActions.Enqueue(action);
+            _logger?.LogDebug($"Action scheduled. Queue size: {_pendingActions.Count}, Hold count: {_holdCount}");
+
             if (_holdCount == 0 && !_isExecuting)
             {
                 ExecutePendingActions();
@@ -49,8 +55,14 @@ namespace Ludo.Reactive
         private void ExecutePendingActions()
         {
             if (_pendingActions == null) return;
-            
+
+            var actionCount = _pendingActions.Count;
+            _logger?.LogDebug($"Executing {actionCount} pending actions");
+
             _isExecuting = true;
+            var successCount = 0;
+            var errorCount = 0;
+
             try
             {
                 while (_pendingActions.Count > 0)
@@ -59,17 +71,19 @@ namespace Ludo.Reactive
                     try
                     {
                         action();
+                        successCount++;
                     }
                     catch (Exception ex)
                     {
-                        // Log the exception but continue processing
-                        Console.WriteLine($"Exception in deferred action: {ex}");
+                        errorCount++;
+                        _logger?.LogException(ex, "Exception in deferred action", new { ActionIndex = successCount + errorCount });
                     }
                 }
             }
             finally
             {
                 _isExecuting = false;
+                _logger?.LogDebug($"Deferred execution completed: {successCount} successful, {errorCount} errors");
             }
         }
     }

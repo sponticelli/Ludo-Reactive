@@ -48,7 +48,7 @@ namespace Ludo.Reactive.Unity
 
         protected ReactiveEffect CreateEffect(Action<ComputationBuilder> logic, params IObservable[] dependencies)
         {
-            var effect = UnityReactiveFlow.CreateMainThreadEffect($"{gameObject.name}.Effect", logic, dependencies);
+            var effect = UnityReactiveFlow.CreateMainThreadEffect($"{gameObject.name}.Effect", logic, null, dependencies);
             _disposables.Add(effect);
             return effect;
         }
@@ -57,7 +57,7 @@ namespace Ludo.Reactive.Unity
             params IObservable[] dependencies)
         {
             var computed =
-                UnityReactiveFlow.CreateMainThreadComputed<T>($"{gameObject.name}.Computed", computation, dependencies);
+                UnityReactiveFlow.CreateMainThreadComputed<T>($"{gameObject.name}.Computed", computation, default(T), null, dependencies);
             _disposables.Add(computed);
             return computed;
         }
