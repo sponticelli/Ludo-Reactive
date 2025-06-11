@@ -1,0 +1,25 @@
+{
+  "name": "com.liteninja.reactive",
+  "version": "1.0.0",
+  "displayName": "Ludo Reactive",
+  "description": "A high-performance reactive programming framework fwith automatic dependency tracking, declarative state management, and efficient batched updates.",
+  "unity": "6000.0",
+  "documentationUrl": "https://github.com/sponticelli/Ludo-Reactive/blob/main/README.md",
+  "changelogUrl": "https://github.com/sponticelli/Ludo-Reactive/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/sponticelli/Ludo-Reactive/blob/main/LICENSE",
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.0"
+  },
+  "keywords": [
+    "reactive programming",
+    "reactive",
+    "data binding",
+    "state management",
+    "declarative",
+    "ui binding",
+    "observable"
+  ]
+  "author": {
+    "name": "Sandro Ponticelli"
+  }
+}
