@@ -7,7 +7,7 @@ using Ludo.Reactive.Logging;
 namespace Ludo.Reactive
 {
     /// <summary>
-    /// Orchestrates computation execution with dependency-aware scheduling
+    /// Orchestrates computation execution with dependency-aware scheduling and batch optimization
     /// </summary>
     public class ReactiveScheduler
     {
@@ -17,6 +17,10 @@ namespace Ludo.Reactive
         private int _maxIterations = 1000;
         private readonly IReactiveLogger _logger;
         private readonly ErrorBoundary _schedulerErrorBoundary;
+
+        // Batch processing optimization
+        private Dictionary<ReactiveComputation, int> _computationDepths = new Dictionary<ReactiveComputation, int>();
+        private bool _depthCacheInvalid = true;
 
         public DeferredExecutionQueue DeferredQueue => _deferredQueue;
 
@@ -32,6 +36,7 @@ namespace Ludo.Reactive
             if (computation == null) throw new ArgumentNullException(nameof(computation));
 
             _scheduledComputations.Add(computation);
+            _depthCacheInvalid = true; // Invalidate depth cache when new computation is scheduled
             _logger?.LogSchedulerEvent("Schedule", $"Computation '{computation.Name}' scheduled for execution");
 
             if (_mode == SchedulingMode.Immediate)
@@ -73,8 +78,8 @@ namespace Ludo.Reactive
 
                     _logger?.LogSchedulerEvent("ExecuteBatch", $"Executing batch of {currentBatch.Count} computations (iteration {iterations})");
 
-                    // Sort by hierarchy (deepest first for proper cleanup order)
-                    currentBatch.Sort();
+                    // Sort by dependency depth for optimal execution order
+                    currentBatch = OptimizeBatchExecutionOrder(currentBatch);
 
                     var successCount = 0;
                     var errorCount = 0;
@@ -83,6 +88,14 @@ namespace Ludo.Reactive
                     {
                         try
                         {
+                            // Skip execution if no dependencies have changed (dirty checking optimization)
+                            if (ShouldSkipExecution(computation))
+                            {
+                                _logger?.LogSchedulerEvent("SkipExecution", $"Skipping computation '{computation.Name}' - no dirty dependencies");
+                                successCount++;
+                                continue;
+                            }
+
                             computation.ExecuteInternal();
                             if (!computation.HasError)
                                 successCount++;
@@ -131,10 +144,78 @@ namespace Ludo.Reactive
         /// </summary>
         public int ScheduledCount => _scheduledComputations.Count;
 
+        /// <summary>
+        /// Optimizes batch execution order based on dependency depth
+        /// </summary>
+        private List<ReactiveComputation> OptimizeBatchExecutionOrder(List<ReactiveComputation> batch)
+        {
+            if (batch.Count <= 1) return batch;
+
+            UpdateDepthCache(batch);
+
+            // Sort by depth (shallow dependencies first)
+            batch.Sort((a, b) =>
+            {
+                var depthA = _computationDepths.GetValueOrDefault(a, 0);
+                var depthB = _computationDepths.GetValueOrDefault(b, 0);
+                return depthA.CompareTo(depthB);
+            });
+
+            return batch;
+        }
+
+        /// <summary>
+        /// Updates the dependency depth cache for computations
+        /// </summary>
+        private void UpdateDepthCache(List<ReactiveComputation> computations)
+        {
+            if (!_depthCacheInvalid) return;
+
+            _computationDepths.Clear();
+
+            foreach (var computation in computations)
+            {
+                _computationDepths[computation] = CalculateDependencyDepth(computation);
+            }
+
+            _depthCacheInvalid = false;
+        }
+
+        /// <summary>
+        /// Calculates the dependency depth of a computation
+        /// </summary>
+        private int CalculateDependencyDepth(ReactiveComputation computation)
+        {
+            // Simple heuristic: use the computation's hierarchy level
+            // In a more sophisticated implementation, this would traverse the actual dependency graph
+            var depth = 0;
+            var current = computation;
+
+            // Count parent hierarchy levels
+            while (current?.Parent != null)
+            {
+                depth++;
+                current = current.Parent as ReactiveComputation;
+                if (depth > 10) break; // Prevent infinite loops
+            }
+
+            return depth;
+        }
+
+        /// <summary>
+        /// Determines if a computation should skip execution based on dirty checking
+        /// </summary>
+        private bool ShouldSkipExecution(ReactiveComputation computation)
+        {
+            // Check if the computation has dirty dependencies
+            return !computation.HasDirtyDependencies();
+        }
+
         public void Dispose()
         {
             _schedulerErrorBoundary?.Dispose();
             _scheduledComputations.Clear();
+            _computationDepths.Clear();
         }
     }
 }

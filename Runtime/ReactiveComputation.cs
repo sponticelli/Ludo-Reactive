@@ -62,6 +62,9 @@ namespace Ludo.Reactive
                     _dependencyTracker.BeginDynamicTracking();
                     ExecuteComputation();
                     _dependencyTracker.EndDynamicTracking();
+
+                    // Update last known values after successful execution
+                    _dependencyTracker.UpdateLastKnownValues();
                     success = true;
                 });
 
@@ -77,6 +80,14 @@ namespace Ludo.Reactive
                 stopwatch.Stop();
                 _logger?.LogComputationExecution(_name, stopwatch.Elapsed, success, _lastError);
             }
+        }
+
+        /// <summary>
+        /// Checks if this computation has dirty dependencies
+        /// </summary>
+        internal bool HasDirtyDependencies()
+        {
+            return _dependencyTracker.HasDirtyDependencies();
         }
 
         protected abstract void ExecuteComputation();
