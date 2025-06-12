@@ -1,3 +1,16 @@
 {
-	"name": "Ludo.Reactive"
+	"name": "Ludo.Reactive",
+	"rootNamespace": "Ludo.Reactive",
+	"references": [
+		"Unity.EditorCoroutines"
+	],
+	"includePlatforms": [],
+	"excludePlatforms": [],
+	"allowUnsafeCode": false,
+	"overrideReferences": false,
+	"precompiledReferences": [],
+	"autoReferenced": true,
+	"defineConstraints": [],
+	"versionDefines": [],
+	"noEngineReferences": false
 }
