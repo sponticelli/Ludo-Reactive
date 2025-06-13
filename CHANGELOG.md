@@ -5,6 +5,74 @@ All notable changes to the Ludo.Reactive package will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-06-13
+
+### Added
+
+#### Core Features
+- **MessageBroker System** - Global event system for decoupled communication between components
+  - Dictionary-based O(1) subscription lookups for performance
+  - Message filtering capabilities with predicate support
+  - Automatic cleanup with weak references to prevent memory leaks
+  - Thread-safe operations with proper locking mechanisms
+  - Extension methods for Unity component integration
+
+- **TestScheduler** - Deterministic scheduler for unit testing
+  - Manual time control with virtual time advancement
+  - Predictable testing of time-based reactive operations
+  - Integration with existing IScheduler interface
+  - Support for scheduled, delayed, and periodic operations
+  - Comprehensive test scenario support
+
+- **Object Pooling System** - Reduces garbage collection pressure
+  - Observable instance pooling for frequently created objects
+  - Subscription object pooling for memory efficiency
+  - Event argument object pooling to minimize allocations
+  - Thread-safe concurrent queue implementation
+  - Configurable pool sizes and automatic cleanup
+
+#### WebGL Optimizations
+- **WebGL-Specific Performance Optimizations**
+  - Reduced garbage collection pressure for browser environments
+  - Optimized coroutine usage for WebGL threading limitations
+  - Memory-efficient observable chains with caching
+  - Batched operations to reduce emission frequency
+  - Browser-optimized timing mechanisms
+
+#### Enhanced UI Integrations
+- **Advanced Slider Reactive Bindings**
+  - Two-way reactive property binding with change detection
+  - Value transformation support for custom data types
+  - Precision-based change detection to prevent feedback loops
+
+- **Toggle/Checkbox Reactive State Management**
+  - Bidirectional binding with ReactiveProperty<bool>
+  - Automatic state synchronization
+  - Change detection to prevent unnecessary updates
+
+- **Enhanced Dropdown Selection Streams**
+  - Rich selection data including index, text, and image
+  - Enum-based reactive property binding
+  - Type-safe dropdown value management
+
+- **ScrollRect Position and Content Change Observables**
+  - Comprehensive scroll data including position, velocity, and bounds
+  - Near-end detection for infinite scrolling scenarios
+  - Viewport and content size tracking
+
+### Performance Improvements
+- **Dictionary-based Subscription Lookups** - O(1) performance for message broker operations
+- **Weak References** - Automatic cleanup prevents memory leaks in long-running applications
+- **Dirty Checking** - Change detection optimizations reduce unnecessary notifications
+- **Computation Caching** - Memoization for frequently accessed values
+- **Object Pooling** - Reuse of frequently created instances reduces GC pressure
+
+### Technical Enhancements
+- **Thread-Safe Operations** - Proper locking mechanisms for concurrent access
+- **Exception Handling** - Robust error handling with proper logging
+- **Memory Management** - Automatic disposal tracking and cleanup
+- **Performance Monitoring** - Built-in metrics for subscription counts and pool usage
+
 ## [1.0.0] - 2024-12-19
 
 ### Added
@@ -192,6 +260,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reactive state management patterns
 - Additional platform optimizations
 - Performance monitoring tools
+- Advanced debugging and profiling tools
+- Reactive collections with change tracking
+- MVVM pattern support for Unity UI
 
 ---
 

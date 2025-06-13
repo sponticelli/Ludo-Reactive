@@ -651,8 +651,6 @@ namespace Ludo.Reactive
                 var lockObject = new object();
                 var firstQueue = new Queue<TFirst>();
                 var secondQueue = new Queue<TSecond>();
-                var firstCompleted = false;
-                var secondCompleted = false;
 
                 composite.Add(first.Subscribe(Observer.Create<TFirst>(
                     value =>
@@ -683,7 +681,6 @@ namespace Ludo.Reactive
                     {
                         lock (lockObject)
                         {
-                            firstCompleted = true;
                             observer.OnCompleted();
                         }
                     }
@@ -718,7 +715,6 @@ namespace Ludo.Reactive
                     {
                         lock (lockObject)
                         {
-                            secondCompleted = true;
                             observer.OnCompleted();
                         }
                     }
@@ -1051,7 +1047,6 @@ namespace Ludo.Reactive
             return Observable.Create<TAccumulate>(observer =>
             {
                 var acc = seed;
-                var hasValue = false;
 
                 return source.Subscribe(Observer.Create<TSource>(
                     value =>
@@ -1059,7 +1054,6 @@ namespace Ludo.Reactive
                         try
                         {
                             acc = accumulator(acc, value);
-                            hasValue = true;
                             observer.OnNext(acc);
                         }
                         catch (Exception ex)

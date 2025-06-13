@@ -66,6 +66,15 @@ namespace Ludo.Reactive
                 return _endOfFrame;
             }
         }
+
+        /// <summary>
+        /// Creates a new TestScheduler for deterministic testing.
+        /// </summary>
+        /// <returns>A new TestScheduler instance.</returns>
+        public static TestScheduler CreateTestScheduler()
+        {
+            return new TestScheduler();
+        }
     }
 
     /// <summary>

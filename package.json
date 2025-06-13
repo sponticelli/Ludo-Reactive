@@ -1,6 +1,6 @@
 {
   "name": "com.liteninja.reactive",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Ludo Reactive",
   "description": "A high-performance reactive programming framework fwith automatic dependency tracking, declarative state management, and efficient batched updates.",
   "unity": "6000.0",
