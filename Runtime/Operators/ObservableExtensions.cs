@@ -624,6 +624,111 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
+        /// Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences have produced an element at a corresponding index.
+        /// </summary>
+        /// <typeparam name="TFirst">The type of the elements in the first source sequence.</typeparam>
+        /// <typeparam name="TSecond">The type of the elements in the second source sequence.</typeparam>
+        /// <typeparam name="TResult">The type of the elements in the result sequence.</typeparam>
+        /// <param name="first">First observable source.</param>
+        /// <param name="second">Second observable source.</param>
+        /// <param name="resultSelector">Function to invoke for each pair of elements at the same index.</param>
+        /// <returns>An observable sequence containing the result of pairwise combining the elements of the sources using the specified result selector function.</returns>
+        public static IObservable<TResult> Zip<TFirst, TSecond, TResult>(
+            this IObservable<TFirst> first,
+            IObservable<TSecond> second,
+            Func<TFirst, TSecond, TResult> resultSelector)
+        {
+            if (first == null)
+                throw new ArgumentNullException(nameof(first));
+            if (second == null)
+                throw new ArgumentNullException(nameof(second));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            return Observable.Create<TResult>(observer =>
+            {
+                var composite = new CompositeDisposable();
+                var lockObject = new object();
+                var firstQueue = new Queue<TFirst>();
+                var secondQueue = new Queue<TSecond>();
+                var firstCompleted = false;
+                var secondCompleted = false;
+
+                composite.Add(first.Subscribe(Observer.Create<TFirst>(
+                    value =>
+                    {
+                        lock (lockObject)
+                        {
+                            if (secondQueue.Count > 0)
+                            {
+                                var secondValue = secondQueue.Dequeue();
+                                try
+                                {
+                                    var result = resultSelector(value, secondValue);
+                                    observer.OnNext(result);
+                                }
+                                catch (Exception ex)
+                                {
+                                    observer.OnError(ex);
+                                }
+                            }
+                            else
+                            {
+                                firstQueue.Enqueue(value);
+                            }
+                        }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        lock (lockObject)
+                        {
+                            firstCompleted = true;
+                            observer.OnCompleted();
+                        }
+                    }
+                )));
+
+                composite.Add(second.Subscribe(Observer.Create<TSecond>(
+                    value =>
+                    {
+                        lock (lockObject)
+                        {
+                            if (firstQueue.Count > 0)
+                            {
+                                var firstValue = firstQueue.Dequeue();
+                                try
+                                {
+                                    var result = resultSelector(firstValue, value);
+                                    observer.OnNext(result);
+                                }
+                                catch (Exception ex)
+                                {
+                                    observer.OnError(ex);
+                                }
+                            }
+                            else
+                            {
+                                secondQueue.Enqueue(value);
+                            }
+                        }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        lock (lockObject)
+                        {
+                            secondCompleted = true;
+                            observer.OnCompleted();
+                        }
+                    }
+                )));
+
+                return composite;
+            });
+        }
+
+        /// <summary>
         /// Flattens the observable sequences from the source observable into a single observable sequence.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the source sequences.</typeparam>
