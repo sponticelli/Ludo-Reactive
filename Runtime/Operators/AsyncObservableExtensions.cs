@@ -259,5 +259,93 @@ namespace Ludo.Reactive
 
             return source.SubscribeOn(UnitySchedulers.MainThread);
         }
+
+        /// <summary>
+        /// Creates an observable from a Task.
+        /// </summary>
+        /// <typeparam name="T">The type of the task result.</typeparam>
+        /// <param name="task">The task to convert.</param>
+        /// <returns>An observable that emits the task result.</returns>
+        public static IObservable<T> FromTask<T>(Task<T> task)
+        {
+            return task.ToObservable();
+        }
+
+        /// <summary>
+        /// Creates an observable from a Task.
+        /// </summary>
+        /// <param name="task">The task to convert.</param>
+        /// <returns>An observable that emits Unit when the task completes.</returns>
+        public static IObservable<Unit> FromTask(Task task)
+        {
+            return task.ToObservable();
+        }
+
+        /// <summary>
+        /// Transforms the elements of an observable sequence asynchronously.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source elements.</typeparam>
+        /// <typeparam name="TResult">The type of the result elements.</typeparam>
+        /// <param name="source">The source observable sequence.</param>
+        /// <param name="selector">An async function to transform each element.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>An observable sequence with transformed elements.</returns>
+        public static IObservable<TResult> SelectAsync<TSource, TResult>(
+            this IObservable<TSource> source,
+            Func<TSource, Task<TResult>> selector,
+            CancellationToken cancellationToken = default)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return source.SelectMany(x => selector(x).ToObservable());
+        }
+
+        /// <summary>
+        /// Transforms the elements of an observable sequence asynchronously with cancellation support.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source elements.</typeparam>
+        /// <typeparam name="TResult">The type of the result elements.</typeparam>
+        /// <param name="source">The source observable sequence.</param>
+        /// <param name="selector">An async function to transform each element with cancellation support.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>An observable sequence with transformed elements.</returns>
+        public static IObservable<TResult> SelectAsync<TSource, TResult>(
+            this IObservable<TSource> source,
+            Func<TSource, CancellationToken, Task<TResult>> selector,
+            CancellationToken cancellationToken = default)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return source.SelectMany(x => selector(x, cancellationToken).ToObservable());
+        }
+
+        /// <summary>
+        /// Filters the elements of an observable sequence asynchronously.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="source">The source observable sequence.</param>
+        /// <param name="predicate">An async function to test each element.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>An observable sequence with filtered elements.</returns>
+        public static IObservable<T> WhereAsync<T>(
+            this IObservable<T> source,
+            Func<T, Task<bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.SelectMany(x =>
+                predicate(x).ToObservable().SelectMany(result =>
+                    result ? Observable.Return(x) : Observable.Empty<T>()));
+        }
     }
 }

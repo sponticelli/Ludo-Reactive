@@ -33,10 +33,11 @@ namespace Ludo.Reactive
         /// Adds a disposable to be tracked and automatically disposed when this GameObject is destroyed.
         /// </summary>
         /// <param name="disposable">The disposable to track.</param>
+        /// <exception cref="ArgumentNullException">Thrown when disposable is null.</exception>
         public void Add(IDisposable disposable)
         {
             if (disposable == null)
-                return;
+                throw new ArgumentNullException(nameof(disposable));
 
             lock (_lock)
             {

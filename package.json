@@ -8,7 +8,7 @@
   "changelogUrl": "https://github.com/sponticelli/Ludo-Reactive/blob/main/CHANGELOG.md",
   "licensesUrl": "https://github.com/sponticelli/Ludo-Reactive/blob/main/LICENSE",
   "dependencies": {
-    "com.unity.editorcoroutines": "1.0.0"
+    "com.unity.editorcoroutines": "1.2.2"
   },
   "keywords": [
     "reactive programming",

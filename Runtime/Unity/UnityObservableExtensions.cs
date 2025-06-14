@@ -283,7 +283,7 @@ namespace Ludo.Reactive
                     yield return null;
                 }
 
-                if (error != null)
+                if (error != null && onError == null)
                 {
                     Debug.LogError($"[Ludo.Reactive] Observable coroutine terminated with error: {error}");
                 }
@@ -316,7 +316,11 @@ namespace Ludo.Reactive
                 var composite = new CompositeDisposable();
 
                 composite.Add(other.Subscribe(Observer.Create<TOther>(
-                    _ => observer.OnCompleted(),
+                    _ =>
+                    {
+                        observer.OnCompleted();
+                        composite.Dispose(); // Dispose all subscriptions when terminating
+                    },
                     observer.OnError,
                     () => { }
                 )));
@@ -324,6 +328,127 @@ namespace Ludo.Reactive
                 composite.Add(source.Subscribe(observer));
 
                 return composite;
+            });
+        }
+
+        /// <summary>
+        /// Takes elements from the observable sequence until the specified GameObject is destroyed.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence to propagate elements for.</param>
+        /// <param name="gameObject">GameObject whose destruction terminates the sequence.</param>
+        /// <returns>An observable sequence containing the elements of the source sequence up to the point the GameObject is destroyed.</returns>
+        public static IObservable<T> TakeUntilDestroy<T>(
+            this IObservable<T> source,
+            GameObject gameObject)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (gameObject == null)
+                throw new ArgumentNullException(nameof(gameObject));
+
+            return source.TakeUntil(gameObject.OnDestroyAsObservable());
+        }
+
+        /// <summary>
+        /// Takes elements from the observable sequence until the specified Component is destroyed.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence to propagate elements for.</param>
+        /// <param name="component">Component whose destruction terminates the sequence.</param>
+        /// <returns>An observable sequence containing the elements of the source sequence up to the point the Component is destroyed.</returns>
+        public static IObservable<T> TakeUntilDestroy<T>(
+            this IObservable<T> source,
+            Component component)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
+
+            return source.TakeUntil(component.OnDestroyAsObservable());
+        }
+
+        /// <summary>
+        /// Delays the observable sequence by the specified number of frames.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence to delay.</param>
+        /// <param name="frameCount">Number of frames to delay.</param>
+        /// <returns>An observable sequence that is delayed by the specified number of frames.</returns>
+        public static IObservable<T> DelayFrame<T>(
+            this IObservable<T> source,
+            int frameCount)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (frameCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(frameCount));
+
+            if (frameCount == 0)
+                return source;
+
+            return Observable.Create<T>(observer =>
+            {
+                return source.Subscribe(Observer.Create<T>(
+                    value =>
+                    {
+                        var runner = UnitySchedulerBase.Runner;
+                        runner.StartCoroutine(DelayFrameCoroutine(frameCount, () => observer.OnNext(value)));
+                    },
+                    observer.OnError,
+                    observer.OnCompleted
+                ));
+            });
+        }
+
+        /// <summary>
+        /// Converts an observable sequence to a yield instruction that can be used in coroutines.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">The observable sequence to convert.</param>
+        /// <param name="onNext">Action to invoke for each element.</param>
+        /// <param name="onError">Action to invoke upon exceptional termination.</param>
+        /// <returns>A yield instruction that completes when the observable sequence completes.</returns>
+        public static IEnumerator ToYieldInstruction<T>(
+            this IObservable<T> source,
+            Action<T> onNext = null,
+            Action<Exception> onError = null)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return source.ToCoroutine(onNext, onError);
+        }
+
+        private static IEnumerator DelayFrameCoroutine(int frameCount, Action action)
+        {
+            for (int i = 0; i < frameCount; i++)
+            {
+                yield return null;
+            }
+            action?.Invoke();
+        }
+
+        /// <summary>
+        /// Observes the OnDestroy event of the specified GameObject.
+        /// </summary>
+        /// <param name="gameObject">The GameObject to observe.</param>
+        /// <returns>An observable that emits when the GameObject is destroyed.</returns>
+        public static IObservable<Unit> OnDestroyAsObservable(this GameObject gameObject)
+        {
+            if (gameObject == null)
+                throw new ArgumentNullException(nameof(gameObject));
+
+            return Observable.Create<Unit>(observer =>
+            {
+                var trigger = gameObject.GetComponent<ObservableTrigger>();
+                if (trigger == null)
+                {
+                    trigger = gameObject.AddComponent<ObservableTrigger>();
+                }
+
+                return trigger.OnDestroyAsObservable().Subscribe(observer);
             });
         }
     }

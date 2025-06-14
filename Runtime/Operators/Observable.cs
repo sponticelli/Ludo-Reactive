@@ -486,6 +486,33 @@ namespace Ludo.Reactive
                 .SubscribeOn(scheduler);
         }
 
+        /// <summary>
+        /// Creates an observable from a Task that returns a value.
+        /// </summary>
+        /// <typeparam name="T">The type of the task result.</typeparam>
+        /// <param name="task">The task to convert.</param>
+        /// <returns>An observable that emits the task result.</returns>
+        public static IObservable<T> FromTask<T>(System.Threading.Tasks.Task<T> task)
+        {
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+
+            return task.ToObservable();
+        }
+
+        /// <summary>
+        /// Creates an observable from a Task.
+        /// </summary>
+        /// <param name="task">The task to convert.</param>
+        /// <returns>An observable that emits Unit when the task completes.</returns>
+        public static IObservable<Unit> FromTask(System.Threading.Tasks.Task task)
+        {
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+
+            return task.ToObservable();
+        }
+
         private static MonoBehaviour GetSchedulerRunner()
         {
             // Access the scheduler runner directly
