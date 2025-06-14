@@ -238,6 +238,87 @@ Applies an accumulator function over an observable sequence and returns each int
 - `seed`: The initial accumulator value
 - `accumulator`: An accumulator function to be invoked on each element
 
+### Universal Reactive Programming Terminology Aliases
+
+These aliases provide familiar terminology for developers from other reactive programming ecosystems (RxJS, RxJava, etc.) while maintaining 100% backward compatibility.
+
+#### Map<TSource, TResult>(Func<TSource, TResult> selector)
+**Alias for Select()** - Projects each element of an observable sequence into a new form.
+
+**Parameters:**
+- `selector`: A transform function to apply to each source element
+
+**Note:** Identical functionality to `Select()`. Use whichever terminology you prefer.
+
+#### FlatMap<TSource, TResult>(Func<TSource, IObservable<TResult>> selector)
+**Alias for SelectMany()** - Projects each element to an observable sequence and flattens the resulting sequences.
+
+**Parameters:**
+- `selector`: A transform function to apply to each element
+
+**Note:** Identical functionality to `SelectMany()`. Use whichever terminology you prefer.
+
+#### Fold<TSource, TAccumulate>(TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> accumulator)
+**Alias for Scan()** - Applies an accumulator function over an observable sequence and returns each intermediate result.
+
+**Parameters:**
+- `seed`: The initial accumulator value
+- `accumulator`: An accumulator function to be invoked on each element
+
+**Note:** Identical functionality to `Scan()`. Use whichever terminology you prefer.
+
+#### Filter<T>(Func<T, bool> predicate)
+**Alias for Where()** - Filters the elements of an observable sequence based on a predicate.
+
+**Parameters:**
+- `predicate`: A function to test each source element for a condition
+
+**Note:** Identical functionality to `Where()`. Standard terminology in RxJS, RxJava, RxSwift, and functional programming.
+
+#### Tap<T>(Action<T> onNext)
+**Alias for Do()** - Invokes a specified action for each element in the observable sequence.
+
+**Parameters:**
+- `onNext`: Action to invoke for each element in the observable sequence
+
+**Note:** Identical functionality to `Do()`. Standard terminology in RxJS, RxJava, RxSwift, and Angular.
+
+#### Reduce<TSource, TAccumulate, TResult>(TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> accumulator, Func<TAccumulate, TResult> resultSelector)
+**Alias for Aggregate()** - Applies an accumulator function over an observable sequence and returns the final result.
+
+**Parameters:**
+- `seed`: The initial accumulator value
+- `accumulator`: An accumulator function to be invoked on each element
+- `resultSelector`: A function to transform the final accumulator value into the result value
+
+**Note:** Identical functionality to `Aggregate()`. Standard terminology in RxJS, JavaScript, and functional programming.
+
+#### Of<T>(T value)
+**Alias for Return()** - Returns an observable sequence that contains a single element.
+
+**Parameters:**
+- `value`: Single element in the resulting observable sequence
+
+**Note:** Identical functionality to `Return()`. Standard terminology in RxJS, RxJava, and RxSwift.
+
+#### Debounce<T>(TimeSpan dueTime)
+**Alias for Throttle()** - Returns elements only after the specified duration has passed without another value being emitted.
+
+**Parameters:**
+- `dueTime`: Debouncing duration for each element
+
+**Note:** Identical functionality to `Throttle()`. Standard terminology in RxJS, web development, and Angular.
+
+#### Distinct<T>()
+**Alias for DistinctUntilChanged()** - Returns only distinct contiguous elements according to the default equality comparer.
+
+**Note:** Identical functionality to `DistinctUntilChanged()`. Simplified terminology from RxJava and functional programming.
+
+#### Void<T>()
+**Alias for AsUnitObservable()** - Converts an observable sequence to a Unit observable sequence.
+
+**Note:** Identical functionality to `AsUnitObservable()`. Standard terminology in RxSwift and RxJava for discarding values.
+
 ### Filtering Operators
 
 #### Where<T>(Func<T, bool> predicate)

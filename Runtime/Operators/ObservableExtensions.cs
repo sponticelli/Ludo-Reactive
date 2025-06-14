@@ -128,6 +128,20 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
+        /// Projects each element of an observable sequence into a new form.
+        /// This is an alias for Select() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
+        /// <typeparam name="TResult">The type of the elements in the result sequence.</typeparam>
+        /// <param name="source">A sequence of elements to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each source element.</param>
+        /// <returns>An observable sequence whose elements are the result of invoking the transform function on each element of source.</returns>
+        /// <seealso cref="Select{TSource, TResult}(IObservable{TSource}, Func{TSource, TResult})"/>
+        public static IObservable<TResult> Map<TSource, TResult>(
+            this IObservable<TSource> source,
+            Func<TSource, TResult> selector) => source.Select(selector);
+
+        /// <summary>
         /// Projects each element of an observable sequence to an observable sequence and merges the resulting observable sequences into one observable sequence.
         /// </summary>
         /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
@@ -204,6 +218,20 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
+        /// Projects each element of an observable sequence to an observable sequence and merges the resulting observable sequences into one observable sequence.
+        /// This is an alias for SelectMany() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
+        /// <typeparam name="TResult">The type of the elements in the projected inner sequences and the elements in the merged result sequence.</typeparam>
+        /// <param name="source">An observable sequence of elements to project.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>An observable sequence whose elements are the result of invoking the one-to-many transform function on each element of the input sequence.</returns>
+        /// <seealso cref="SelectMany{TSource, TResult}(IObservable{TSource}, Func{TSource, IObservable{TResult}})"/>
+        public static IObservable<TResult> FlatMap<TSource, TResult>(
+            this IObservable<TSource> source,
+            Func<TSource, IObservable<TResult>> selector) => source.SelectMany(selector);
+
+        /// <summary>
         /// Filters the elements of an observable sequence based on a predicate.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
@@ -241,6 +269,19 @@ namespace Ludo.Reactive
                 ));
             });
         }
+
+        /// <summary>
+        /// Filters the elements of an observable sequence based on a predicate.
+        /// This is an alias for Where() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">An observable sequence whose elements to filter.</param>
+        /// <param name="predicate">A function to test each source element for a condition.</param>
+        /// <returns>An observable sequence that contains elements from the input sequence that satisfy the condition.</returns>
+        /// <seealso cref="Where{T}(IObservable{T}, Func{T, bool})"/>
+        public static IObservable<T> Filter<T>(
+            this IObservable<T> source,
+            Func<T, bool> predicate) => source.Where(predicate);
 
         /// <summary>
         /// Returns an observable sequence that contains only distinct contiguous elements according to the default equality comparer.
@@ -308,6 +349,29 @@ namespace Ludo.Reactive
                 ));
             });
         }
+
+        /// <summary>
+        /// Returns an observable sequence that contains only distinct contiguous elements according to the default equality comparer.
+        /// This is an alias for DistinctUntilChanged() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">An observable sequence to retain distinct contiguous elements for.</param>
+        /// <returns>An observable sequence only containing the distinct contiguous elements from the source sequence.</returns>
+        /// <seealso cref="DistinctUntilChanged{T}(IObservable{T})"/>
+        public static IObservable<T> Distinct<T>(this IObservable<T> source) => source.DistinctUntilChanged();
+
+        /// <summary>
+        /// Returns an observable sequence that contains only distinct contiguous elements according to the specified equality comparer.
+        /// This is an alias for DistinctUntilChanged() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">An observable sequence to retain distinct contiguous elements for.</param>
+        /// <param name="comparer">Equality comparer for source elements.</param>
+        /// <returns>An observable sequence only containing the distinct contiguous elements from the source sequence.</returns>
+        /// <seealso cref="DistinctUntilChanged{T}(IObservable{T}, IEqualityComparer{T})"/>
+        public static IObservable<T> Distinct<T>(
+            this IObservable<T> source,
+            IEqualityComparer<T> comparer) => source.DistinctUntilChanged(comparer);
 
         /// <summary>
         /// Returns the elements from the source observable sequence only after the specified duration has passed without another value being emitted.
@@ -413,23 +477,39 @@ namespace Ludo.Reactive
             return Observable.Create<T>(observer =>
             {
                 var remaining = count;
+                var completed = false;
 
                 return source.Subscribe(Observer.Create<T>(
                     value =>
                     {
-                        if (remaining > 0)
+                        if (remaining > 0 && !completed)
                         {
                             remaining--;
                             observer.OnNext(value);
 
                             if (remaining == 0)
                             {
+                                completed = true;
                                 observer.OnCompleted();
                             }
                         }
                     },
-                    observer.OnError,
-                    observer.OnCompleted
+                    error =>
+                    {
+                        if (!completed)
+                        {
+                            completed = true;
+                            observer.OnError(error);
+                        }
+                    },
+                    () =>
+                    {
+                        if (!completed)
+                        {
+                            completed = true;
+                            observer.OnCompleted();
+                        }
+                    }
                 ));
             });
         }
@@ -513,6 +593,57 @@ namespace Ludo.Reactive
                 ));
             });
         }
+
+        /// <summary>
+        /// Returns the elements from the source observable sequence only after the specified duration has passed without another value being emitted.
+        /// This is an alias for Throttle() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence to debounce.</param>
+        /// <param name="dueTime">Debouncing duration for each element.</param>
+        /// <returns>The debounced observable sequence.</returns>
+        /// <seealso cref="Throttle{T}(IObservable{T}, TimeSpan)"/>
+        public static IObservable<T> Debounce<T>(this IObservable<T> source, TimeSpan dueTime) => source.Throttle(dueTime);
+
+        /// <summary>
+        /// Returns the elements from the source observable sequence only after the specified duration has passed without another value being emitted.
+        /// This is an alias for Throttle() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence to debounce.</param>
+        /// <param name="dueTime">Debouncing duration for each element.</param>
+        /// <param name="scheduler">Scheduler to run timers on.</param>
+        /// <returns>The debounced observable sequence.</returns>
+        /// <seealso cref="Throttle{T}(IObservable{T}, TimeSpan, IScheduler)"/>
+        public static IObservable<T> Debounce<T>(this IObservable<T> source, TimeSpan dueTime, IScheduler scheduler) => source.Throttle(dueTime, scheduler);
+
+        /// <summary>
+        /// Invokes a specified action for each element in the observable sequence.
+        /// This is an alias for Do() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence.</param>
+        /// <param name="onNext">Action to invoke for each element in the observable sequence.</param>
+        /// <returns>The source sequence with the side-effecting behavior applied.</returns>
+        /// <seealso cref="Do{T}(IObservable{T}, Action{T})"/>
+        public static IObservable<T> Tap<T>(this IObservable<T> source, Action<T> onNext) => source.Do(onNext);
+
+        /// <summary>
+        /// Invokes specified actions for each element and lifecycle events in the observable sequence.
+        /// This is an alias for Do() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">Source sequence.</param>
+        /// <param name="onNext">Action to invoke for each element in the observable sequence.</param>
+        /// <param name="onError">Action to invoke upon exceptional termination of the observable sequence.</param>
+        /// <param name="onCompleted">Action to invoke upon graceful termination of the observable sequence.</param>
+        /// <returns>The source sequence with the side-effecting behavior applied.</returns>
+        /// <seealso cref="Do{T}(IObservable{T}, Action{T}, Action{Exception}, Action)"/>
+        public static IObservable<T> Tap<T>(
+            this IObservable<T> source,
+            Action<T> onNext,
+            Action<Exception> onError,
+            Action onCompleted) => source.Do(onNext, onError, onCompleted);
 
         /// <summary>
         /// Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences have produced an element at a corresponding index.
@@ -1116,6 +1247,22 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
+        /// Applies an accumulator function over an observable sequence and returns each intermediate result.
+        /// This is an alias for Scan() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
+        /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+        /// <param name="source">An observable sequence to accumulate over.</param>
+        /// <param name="seed">The initial accumulator value.</param>
+        /// <param name="accumulator">An accumulator function to be invoked on each element.</param>
+        /// <returns>An observable sequence containing the accumulated values.</returns>
+        /// <seealso cref="Scan{TSource, TAccumulate}(IObservable{TSource}, TAccumulate, Func{TAccumulate, TSource, TAccumulate})"/>
+        public static IObservable<TAccumulate> Fold<TSource, TAccumulate>(
+            this IObservable<TSource> source,
+            TAccumulate seed,
+            Func<TAccumulate, TSource, TAccumulate> accumulator) => source.Scan(seed, accumulator);
+
+        /// <summary>
         /// Applies an accumulator function over an observable sequence and returns the final accumulated value.
         /// </summary>
         /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
@@ -1181,6 +1328,126 @@ namespace Ludo.Reactive
         /// <param name="accumulator">An accumulator function to be invoked on each element.</param>
         /// <returns>An observable sequence containing a single element with the final accumulated value.</returns>
         public static IObservable<T> Aggregate<T>(
+            this IObservable<T> source,
+            Func<T, T, T> accumulator)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (accumulator == null)
+                throw new ArgumentNullException(nameof(accumulator));
+
+            return Observable.Create<T>(observer =>
+            {
+                var acc = default(T);
+                var hasValue = false;
+
+                return source.Subscribe(Observer.Create<T>(
+                    value =>
+                    {
+                        try
+                        {
+                            if (hasValue)
+                            {
+                                acc = accumulator(acc, value);
+                            }
+                            else
+                            {
+                                acc = value;
+                                hasValue = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        if (hasValue)
+                        {
+                            observer.OnNext(acc);
+                            observer.OnCompleted();
+                        }
+                        else
+                        {
+                            observer.OnError(new InvalidOperationException("Sequence contains no elements"));
+                        }
+                    }
+                ));
+            });
+        }
+
+        /// <summary>
+        /// Applies an accumulator function over an observable sequence and returns the final result.
+        /// This is an alias for Aggregate() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
+        /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+        /// <typeparam name="TResult">The type of the resulting value.</typeparam>
+        /// <param name="source">An observable sequence to accumulate over.</param>
+        /// <param name="seed">The initial accumulator value.</param>
+        /// <param name="accumulator">An accumulator function to be invoked on each element.</param>
+        /// <param name="resultSelector">A function to transform the final accumulator value into the result value.</param>
+        /// <returns>An observable sequence containing a single element with the final accumulated value.</returns>
+        /// <seealso cref="Aggregate{TSource, TAccumulate, TResult}(IObservable{TSource}, TAccumulate, Func{TAccumulate, TSource, TAccumulate}, Func{TAccumulate, TResult})"/>
+        public static IObservable<TResult> Reduce<TSource, TAccumulate, TResult>(
+            this IObservable<TSource> source,
+            TAccumulate seed,
+            Func<TAccumulate, TSource, TAccumulate> accumulator,
+            Func<TAccumulate, TResult> resultSelector)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (accumulator == null)
+                throw new ArgumentNullException(nameof(accumulator));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            return Observable.Create<TResult>(observer =>
+            {
+                var acc = seed;
+
+                return source.Subscribe(Observer.Create<TSource>(
+                    value =>
+                    {
+                        try
+                        {
+                            acc = accumulator(acc, value);
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        try
+                        {
+                            var result = resultSelector(acc);
+                            observer.OnNext(result);
+                            observer.OnCompleted();
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    }
+                ));
+            });
+        }
+
+        /// <summary>
+        /// Applies an accumulator function over an observable sequence and returns the final result.
+        /// This is an alias for Aggregate() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence and the result of the accumulation.</typeparam>
+        /// <param name="source">An observable sequence to accumulate over.</param>
+        /// <param name="accumulator">An accumulator function to be invoked on each element.</param>
+        /// <returns>An observable sequence containing a single element with the final accumulated value.</returns>
+        /// <seealso cref="Aggregate{T}(IObservable{T}, Func{T, T, T})"/>
+        public static IObservable<T> Reduce<T>(
             this IObservable<T> source,
             Func<T, T, T> accumulator)
         {
@@ -1466,6 +1733,16 @@ namespace Ludo.Reactive
 
             return source.Select(_ => Unit.Default);
         }
+
+        /// <summary>
+        /// Converts an observable sequence to a Unit observable sequence.
+        /// This is an alias for AsUnitObservable() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
+        /// <param name="source">The observable sequence to convert.</param>
+        /// <returns>An observable sequence that emits Unit for each element in the source sequence.</returns>
+        /// <seealso cref="AsUnitObservable{T}(IObservable{T})"/>
+        public static IObservable<Unit> Void<T>(this IObservable<T> source) => ObservableExtensions.AsUnitObservable(source);
 
         /// <summary>
         /// Returns a connectable observable sequence that shares a single subscription to the underlying sequence.

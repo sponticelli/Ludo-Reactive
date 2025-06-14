@@ -27,6 +27,16 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
+        /// Returns an observable sequence that contains a single element.
+        /// This is an alias for Return() to provide universal reactive programming terminology compatibility.
+        /// </summary>
+        /// <typeparam name="T">The type of the element in the resulting sequence.</typeparam>
+        /// <param name="value">Single element in the resulting observable sequence.</param>
+        /// <returns>An observable sequence containing the single specified element.</returns>
+        /// <seealso cref="Return{T}(T)"/>
+        public static IObservable<T> Of<T>(T value) => Return(value);
+
+        /// <summary>
         /// Returns an empty observable sequence.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the sequence.</typeparam>

@@ -1,15 +1,30 @@
 # Ludo.Reactive
 
-A high-performance reactive programming framework designed specifically for Unity 6, providing developers with powerful tools for handling asynchronous data streams, event-driven programming, and automatic UI binding.
+A high-performance reactive programming framework designed specifically for Unity 6, providing developers with powerful tools for handling asynchronous data streams, event-driven programming, state management, reactive collections, and automatic UI binding.
 
 ## ✨ Features
 
+### Core Reactive Programming
 - **🎯 Unity-First Design**: Seamless integration with Unity's component system, lifecycle, and editor
 - **⚡ High Performance**: Minimal garbage collection, optimized for mobile/WebGL platforms
 - **🔧 Developer-Friendly**: Intuitive fluent API with comprehensive operator library
 - **🏗️ SOLID Architecture**: Maintainable, extensible design following clean code principles
 - **🔄 Automatic Memory Management**: Built-in disposal tracking with Unity lifecycle integration
 - **📱 Platform Optimized**: WebGL and mobile-ready with object pooling and efficient algorithms
+
+### State Management (v1.2.0)
+- **🏪 Redux-like Store**: Immutable state management with action dispatching
+- **⏪ Undo/Redo System**: Complete command history with reversible operations
+- **💾 State Persistence**: Save/load state with multiple storage backends
+- **🎯 State Selectors**: Efficient state slicing with memoization
+- **🔧 Middleware Support**: Extensible action processing pipeline
+
+### Reactive Collections (v1.2.0)
+- **📋 ObservableList**: List with granular change tracking and batch operations
+- **📚 ObservableDictionary**: Dictionary with key/value change notifications
+- **🎯 ObservableSet**: Set with add/remove notifications and set operations
+- **🔄 Collection Synchronization**: Multi-collection sync with conflict resolution
+- **📊 Efficient Diffing**: Myers' algorithm for optimal collection updates
 
 ## 🚀 Quick Start
 
@@ -108,6 +123,141 @@ damageEvents.Subscribe(damage => ApplyDamage(damage));
 damageEvents.OnNext(25); // Trigger damage
 ```
 
+## 🏪 State Management (v1.2.0)
+
+### ReactiveStore
+Redux-like state management with immutable updates:
+
+```csharp
+// Define your state
+public class GameState
+{
+    public int Level { get; set; }
+    public int Gold { get; set; }
+    public string PlayerName { get; set; }
+}
+
+// Create store with reducer
+var store = new ReactiveStore<GameState>(
+    initialState: new GameState { Level = 1, Gold = 100, PlayerName = "Player" },
+    reducer: new GameStateReducer()
+);
+
+// Subscribe to state changes
+store.StateChanged.Subscribe(change =>
+    Debug.Log($"State changed by {change.Action}"));
+
+// Dispatch actions
+store.Dispatch(new LevelUpAction());
+```
+
+### State Selectors
+Efficiently select and observe parts of state:
+
+```csharp
+// Create memoized selectors
+var levelSelector = store.Select(state => state.Level, "LevelSelector");
+var goldSelector = store.Select(state => state.Gold, "GoldSelector");
+
+// Subscribe to specific state changes
+levelSelector.Subscribe(level => UpdateLevelUI(level));
+goldSelector.Subscribe(gold => UpdateGoldUI(gold));
+```
+
+### Undo/Redo System
+Complete command history with reversible operations:
+
+```csharp
+var commandHistory = new CommandHistory<GameState>();
+
+// Execute commands
+var newState = commandHistory.ExecuteCommand(new AddGoldCommand(50), currentState);
+
+// Undo/Redo
+if (commandHistory.CanUndo)
+    var undoState = commandHistory.Undo(currentState);
+
+if (commandHistory.CanRedo)
+    var redoState = commandHistory.Redo(currentState);
+```
+
+### State Persistence
+Save and load state with multiple backends:
+
+```csharp
+// File-based persistence
+var persistence = new FileStatePersistence<GameState>();
+persistence.SaveState(gameState, "savegame");
+var loadedState = persistence.LoadState("savegame");
+
+// PlayerPrefs persistence
+var prefsPersistence = new PlayerPrefsStatePersistence<GameState>();
+```
+
+## 📋 Reactive Collections (v1.2.0)
+
+### ObservableList
+List with granular change tracking:
+
+```csharp
+var inventory = new ObservableList<string>();
+
+// Subscribe to all changes
+inventory.Subscribe(changeSet =>
+    Debug.Log($"Inventory changed: {changeSet.GetSummary()}"));
+
+// Subscribe to specific operations
+inventory.ObserveAdd().Subscribe(addEvent =>
+    Debug.Log($"Added {addEvent.Value} at index {addEvent.Index}"));
+
+// Batch operations
+inventory.AddRange(new[] { "Sword", "Shield", "Potion" });
+```
+
+### ObservableDictionary
+Dictionary with key/value change notifications:
+
+```csharp
+var playerStats = new ObservableDictionary<string, int>();
+
+// Subscribe to changes
+playerStats.ObserveChanges().Subscribe(change =>
+    Debug.Log($"Stat {change.Key}: {change.OldValue} -> {change.NewValue}"));
+
+// Update stats
+playerStats["Strength"] = 15;
+playerStats["Agility"] = 12;
+```
+
+### ObservableSet
+Set with add/remove notifications:
+
+```csharp
+var achievements = new ObservableSet<string>();
+
+// Subscribe to additions
+achievements.ObserveAdd().Subscribe(addEvent =>
+    ShowAchievementUnlocked(addEvent.Item));
+
+// Set operations
+achievements.UnionWith(new[] { "First Steps", "Level Master" });
+```
+
+### Collection Synchronization
+Synchronize multiple collections with conflict resolution:
+
+```csharp
+var synchronizer = new CollectionSynchronizer<string>(
+    ConflictResolutionStrategy.SourceWins);
+
+// Add collections to sync group
+synchronizer.AddCollection(primaryInventory, "Primary");
+synchronizer.AddCollection(backupInventory, "Backup");
+
+// Changes to one collection automatically sync to others
+primaryInventory.Add("New Item"); // Also appears in backupInventory
+```
+
 ## 🎮 Unity-Specific Features
 
 ### Automatic Disposal
@@ -141,15 +291,30 @@ Observable.FromCoroutine(() => LoadDataCoroutine())
 ## 🔧 Operators
 
 ### Transformation
-- `Select` - Transform values
-- `SelectMany` - Flatten nested observables
+- `Select` / `Map` - Transform values (universal terminology support)
+- `SelectMany` / `FlatMap` - Flatten nested observables (universal terminology support)
 - `Buffer` - Collect values over time
-- `Scan` - Accumulate values
+- `Scan` / `Fold` - Accumulate values (universal terminology support)
+- `Aggregate` / `Reduce` - Apply accumulator and return final result (universal terminology support)
+- `AsUnitObservable` / `Void` - Convert to Unit observable (universal terminology support)
+
+### Universal Reactive Programming Terminology
+Ludo.Reactive supports familiar terminology from other reactive ecosystems:
+- **Map** - Alias for Select (RxJS, RxJava compatible)
+- **FlatMap** - Alias for SelectMany (RxJS, RxJava compatible)
+- **Fold** - Alias for Scan (functional programming compatible)
+- **Filter** - Alias for Where (RxJS, RxJava, functional programming compatible)
+- **Tap** - Alias for Do (RxJS, RxJava, Angular compatible)
+- **Reduce** - Alias for Aggregate (RxJS, JavaScript, functional programming compatible)
+- **Of** - Alias for Return (RxJS, RxJava, RxSwift compatible)
+- **Debounce** - Alias for Throttle (RxJS, web development, Angular compatible)
+- **Distinct** - Alias for DistinctUntilChanged (RxJava, simplified terminology)
+- **Void** - Alias for AsUnitObservable (RxSwift, RxJava compatible)
 
 ### Filtering
-- `Where` - Filter by predicate
-- `DistinctUntilChanged` - Skip duplicate consecutive values
-- `Throttle` - Limit emission rate
+- `Where` / `Filter` - Filter by predicate (universal terminology support)
+- `DistinctUntilChanged` / `Distinct` - Skip duplicate consecutive values (universal terminology support)
+- `Throttle` / `Debounce` - Limit emission rate (universal terminology support)
 - `Take` - Take first N values
 
 ### Combination
@@ -158,7 +323,7 @@ Observable.FromCoroutine(() => LoadDataCoroutine())
 - `Zip` - Pair values by index
 
 ### Utility
-- `Do` - Side effects
+- `Do` / `Tap` - Side effects (universal terminology support)
 - `Delay` - Time-shift emissions
 - `Timeout` - Apply timeout policy
 

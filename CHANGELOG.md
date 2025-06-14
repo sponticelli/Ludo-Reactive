@@ -5,6 +5,156 @@ All notable changes to the Ludo.Reactive package will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-01-27
+
+### Added
+
+#### Universal Reactive Programming Terminology Aliases
+- **Map()** - Alias for Select() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Select() for transforming observable values
+  - Familiar to developers from RxJS, RxJava, and other reactive frameworks
+  - Maintains 100% backward compatibility with existing Select() usage
+- **FlatMap()** - Alias for SelectMany() to provide universal reactive programming terminology compatibility
+  - Identical functionality to SelectMany() for flattening nested observables
+  - Common terminology across reactive programming ecosystems
+  - Maintains 100% backward compatibility with existing SelectMany() usage
+- **Fold()** - Alias for Scan() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Scan() for accumulating values with intermediate results
+  - Familiar terminology from functional programming languages
+  - Maintains 100% backward compatibility with existing Scan() usage
+- **Filter()** - Alias for Where() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Where() for filtering observable sequences based on predicates
+  - Standard terminology across RxJS, RxJava, RxSwift, and most functional programming languages
+  - Maintains 100% backward compatibility with existing Where() usage
+- **Tap()** - Alias for Do() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Do() for performing side effects without affecting the stream
+  - Standard terminology in RxJS, RxJava, RxSwift, and Angular reactive programming
+  - Supports both single-action and full lifecycle (onNext, onError, onCompleted) overloads
+  - Maintains 100% backward compatibility with existing Do() usage
+- **Reduce()** - Alias for Aggregate() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Aggregate() for applying accumulator functions and returning final results
+  - Standard terminology in RxJS, JavaScript Array methods, and most functional programming languages
+  - Supports both seeded and non-seeded reduction operations
+  - Maintains 100% backward compatibility with existing Aggregate() usage
+- **Of()** - Alias for Return() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Return() for creating observables with single elements
+  - Standard terminology in RxJS, RxJava, and RxSwift for single-value observable creation
+  - Maintains 100% backward compatibility with existing Return() usage
+- **Debounce()** - Alias for Throttle() to provide universal reactive programming terminology compatibility
+  - Identical functionality to Throttle() for limiting emission rate after periods of silence
+  - Standard terminology in RxJS, web development, and Angular reactive programming
+  - Supports both TimeSpan-only and TimeSpan+Scheduler overloads
+  - Maintains 100% backward compatibility with existing Throttle() usage
+- **Distinct()** - Alias for DistinctUntilChanged() to provide universal reactive programming terminology compatibility
+  - Identical functionality to DistinctUntilChanged() for skipping consecutive duplicate values
+  - Simplified terminology commonly used in RxJava and functional programming contexts
+  - Supports both default equality comparer and custom comparer overloads
+  - Maintains 100% backward compatibility with existing DistinctUntilChanged() usage
+- **Void()** - Alias for AsUnitObservable() to provide universal reactive programming terminology compatibility
+  - Identical functionality to AsUnitObservable() for converting sequences to Unit type
+  - Standard terminology in RxSwift and RxJava for discarding values while preserving events
+  - Maintains 100% backward compatibility with existing AsUnitObservable() usage
+
+### Enhanced Features
+- **Developer Experience** - Improved approachability for developers from other reactive ecosystems
+- **Cross-Platform Familiarity** - Universal terminology reduces learning curve for new users
+- **Documentation** - Comprehensive XML documentation with cross-references to original methods
+
+## [1.2.0] - 2025-06-13
+
+### Added
+
+#### State Management System
+- **ReactiveStore<TState>** - Redux-like state container with immutable state updates
+  - Action dispatching with middleware support
+  - Reactive state observation with change events
+  - Thread-safe operations with proper locking
+  - Built-in logging middleware for debugging
+- **IAction & ActionBase** - Action system for describing state changes
+  - Timestamp tracking for all actions
+  - Support for payload actions with typed data
+  - Reversible actions for undo/redo functionality
+- **IReducer & ReducerBase** - Pure functions for state transformations
+  - Composite reducers for handling multiple action types
+  - Functional reducers for simple use cases
+  - Action filtering and routing capabilities
+- **StateSelector & MemoizedSelector** - Efficient state slicing and caching
+  - Memoization for performance optimization
+  - Reactive selectors that emit on changes
+  - Performance metrics and cache hit tracking
+- **ImmutableStateUpdater** - Utilities for immutable state updates
+  - Property update helpers with fluent API
+  - Deep copying for reference types
+  - Immutability validation and change detection
+
+#### Command History & Undo/Redo
+- **CommandHistory<TState>** - Complete undo/redo system
+  - Configurable history size limits
+  - Command execution tracking with timestamps
+  - Branching support for complex undo scenarios
+  - Observable history change events
+- **IReversibleCommand** - Commands that can be executed and undone
+  - Base implementations for common patterns
+  - Command naming and metadata support
+  - Conditional undo capabilities
+
+#### State Persistence
+- **IStatePersistence<TState>** - Flexible state persistence interface
+- **PlayerPrefsStatePersistence** - Unity PlayerPrefs-based persistence
+- **FileStatePersistence** - File system-based persistence with JSON
+- **MemoryStatePersistence** - In-memory persistence for testing
+- Cross-session state management with automatic serialization
+
+#### Enhanced Reactive Collections
+- **ObservableList<T>** - List with granular change tracking
+  - Batch operations with AddRange support
+  - Detailed change events with timestamps
+  - Collection change sets for efficient updates
+  - Unity serialization support
+- **ObservableDictionary<TKey, TValue>** - Dictionary with key/value change events
+  - Separate observables for add/remove/replace operations
+  - Conflict detection and resolution
+  - Thread-safe operations
+- **ObservableSet<T>** - Set with add/remove notifications
+  - Complete set operation support (Union, Intersect, Except)
+  - Uniqueness enforcement with custom comparers
+  - Efficient membership testing
+
+#### Collection Synchronization
+- **CollectionSynchronizer<T>** - Multi-collection synchronization
+  - Conflict resolution strategies (Source/Target/MostRecent/Custom)
+  - Bidirectional synchronization support
+  - Performance statistics and monitoring
+  - Automatic cleanup and disposal management
+- **CollectionDiffer<T>** - Efficient diff algorithms
+  - Myers' diff algorithm for optimal performance
+  - Simple diff for append/remove scenarios
+  - Longest Common Subsequence computation
+  - Diff application with error handling
+
+#### Collection Change Tracking
+- **CollectionChangeSet<T>** - Batch change representation
+  - Granular change type tracking (Add/Remove/Replace/Move/Reset)
+  - Change summarization and statistics
+  - Timestamp tracking for all changes
+- **DiffOperation<T>** - Individual diff operations
+  - Insert/Delete/Replace operation types
+  - Index-based change tracking
+  - Efficient batch application
+
+### Enhanced Features
+- **Fluent API Extensions** - Chainable methods for state updates
+- **Performance Optimizations** - Object pooling for change events
+- **Memory Management** - Automatic disposal and cleanup
+- **Error Handling** - Robust exception handling with logging
+- **Unity Integration** - Seamless Unity component lifecycle support
+
+### Examples & Documentation
+- **ReactiveV12Example** - Comprehensive demonstration of all v1.2.0 features
+- **State Management Patterns** - Best practices and common patterns
+- **Collection Synchronization Examples** - Multi-collection scenarios
+- **Undo/Redo Implementation Guide** - Complete command pattern examples
+
 ## [1.1.0] - 2025-06-13
 
 ### Added
@@ -250,20 +400,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Guide
 - None required (initial release)
 
----
 
-## Future Roadmap
-
-### Planned for v1.2.0
-- Custom scheduler implementations
-- Advanced animation integration
-- Reactive state management patterns
-- Additional platform optimizations
-- Performance monitoring tools
-- Advanced debugging and profiling tools
-- Reactive collections with change tracking
-- MVVM pattern support for Unity UI
-
----
 
 For more information about each feature, see the [Documentation](Documentation/) folder.

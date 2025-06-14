@@ -295,20 +295,6 @@ namespace Ludo.Reactive
         }
 
         /// <summary>
-        /// Converts an observable sequence to Unit type.
-        /// </summary>
-        /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
-        /// <param name="source">The observable sequence to convert.</param>
-        /// <returns>An observable sequence of Unit values.</returns>
-        public static IObservable<Unit> AsUnitObservable<T>(this IObservable<T> source)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-
-            return source.Select(_ => Unit.Default);
-        }
-
-        /// <summary>
         /// Returns elements from an observable sequence until the other observable sequence produces a value.
         /// </summary>
         /// <typeparam name="T">The type of the elements in the source sequence.</typeparam>
